@@ -1,6 +1,0 @@
-test = open('./test.bin', 'wb')
-test.write(bytearray([6]))
-test.close()
-test = open('./test.bin', 'rb')
-print(test.read(1))
-test.close()
