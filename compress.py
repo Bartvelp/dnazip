@@ -1,27 +1,23 @@
 import sys
 import time
 
-def fourBasesToByte(bases):
+def basesToBits(bases):
     # Not the best looking, but it's fairly fast
     bases = bases\
         .replace('A', '00')\
         .replace('C', '01')\
         .replace('T', '10')\
         .replace('G', '11')
-    return int(bases, 2) # return a 8 bit integer
+    return bases
 
 def compressDNA(dnaSeq, outputFile):
     lengthDNA = len(dnaSeq)
     outputFile.write('DNAZIP START: {}\n'.format(lengthDNA).encode('utf-8')) # Add amount of BP's to header for deflating
-    dnaChunks = [dnaSeq[i:i+4] for i in range(0, lengthDNA, 4)] # Create a list of chunks of 4 BP https://stackoverflow.com/a/9475354
-    if len(dnaChunks[-1]) != 4:
-        dnaChunks[-1] = dnaChunks[-1].ljust(4, 'A') # Pad last DNA seq with A's https://stackoverflow.com/a/5676676
-    
+
     start = time.time()
-    bytelist = []
-    for chunk in dnaChunks: # every chunk is guaranteed to be 4 bases (1 byte)
-        bytelist.append(fourBasesToByte(chunk))
-    outputFile.write(bytearray(bytelist)) # write compressed bytes to file
+    bitSeq = basesToBits(dnaSeq)
+    byteBuffer = [int(bitSeq[i:i+8], 2) for i in range(0, len(bitSeq), 8)]
+    outputFile.write(bytearray(byteBuffer)) # write compressed bytes to file
     end = time.time()
     print(end - start)
 
