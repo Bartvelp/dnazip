@@ -47,7 +47,6 @@ def decompress(inputFile, outputFile):
         # The random DNA byts are always fully read so the pointer in the filehandle is always moved forward to either
         # a new header or to another 'DNAZIP START', meaning the next bytes python reads are handled as a new line, even though
         # no newline character is present before them. That is why .startswith works
-
         if line.decode('utf-8').startswith('DNAZIP START'): # It's a start line, read the next x bytes
             amountOfBases = int(line[14:-1]) # Remove 'DNAZIP START: ' and trailing newline
             amountOfBytes = math.ceil(amountOfBases / 4) # end is padded (with zero's)
@@ -57,8 +56,8 @@ def decompress(inputFile, outputFile):
             outputFile.write(line.decode('utf-8'))
 
 if __name__ == "__main__": # execute if not included and is main script
-    inputF = open('./{}.dnazip'.format(sys.argv[1]), 'rb')
-    outputF = open('./{}.out.fa'.format(sys.argv[1]), 'w')
+    inputF = open('{}.dnazip'.format(sys.argv[1]), 'rb')
+    outputF = open('{}.out.fa'.format(sys.argv[1]), 'w')
 
     decompress(inputF, outputF)
     print('Done decompressing')

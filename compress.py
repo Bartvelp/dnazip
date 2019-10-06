@@ -14,14 +14,11 @@ def compressDNA(dnaSeq, outputFile):
     lengthDNA = len(dnaSeq)
     outputFile.write('DNAZIP START: {}\n'.format(lengthDNA).encode('utf-8')) # Add amount of BP's to header for deflating
 
-    start = time.time()
-    bitSeq = basesToBits(dnaSeq)
-    byteBuffer = [int(bitSeq[i:i+8], 2) for i in range(0, len(bitSeq), 8)]
+    bitSeq = basesToBits(dnaSeq) # Transform bases into a string of bits
+    byteBuffer = [int(bitSeq[i:i+8], 2) for i in range(0, len(bitSeq), 8)] # transform bit string into list of 8 bit ints
     outputFile.write(bytearray(byteBuffer)) # write compressed bytes to file
-    end = time.time()
-    print(end - start)
 
-def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 1 * 1048576): # max size to keep in memory for dnaBuffer (1,048,576 bytes in MB)
+def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 10 * 1048576): # max size to keep in memory for dnaBuffer (1,048,576 bytes in MB)
     outputFile.write('dnazip file; v0; https://github.com/Bartvelp/dnazip\n'.encode('utf-8')) # Encode header because of binary mode
     dnaBuffer = '' # Accumulator to increase effiency
 
@@ -44,15 +41,15 @@ def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 1 * 1048576): # max size t
                 if (len(dnaBuffer) > 0): # If anything is the buffer write it
                     compressDNA(dnaBuffer, outputFile)
                     dnaBuffer = '' # reset dnaBuffer
-                outputFile.write(line.encode('utf-8')) # copy unknown line to output
+                outputFile.write(line.encode('utf-8') + '\n'.encode('utf-8')) # copy unknown line to output, and readd the stripped newline
     # done with every line, check if anything is left in the buffer
     if (len(dnaBuffer) > 0):
         compressDNA(dnaBuffer, outputFile)
 
 
 if __name__ == "__main__": # execute if not included and is main script
-    inputF = open('./{}.fa'.format(sys.argv[1]), 'r')
-    outputF = open('./{}.dnazip'.format(sys.argv[1]), 'wb')
+    inputF = open('{}.fa'.format(sys.argv[1]), 'r')
+    outputF = open('{}.dnazip'.format(sys.argv[1]), 'wb')
 
     compress(inputF, outputF)
     print('Done compressing')
