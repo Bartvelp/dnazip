@@ -1,20 +1,14 @@
-def fourBasesToByte(bases):
-    byteString = ''
-    for base in bases:
-        byteString += baseToBits(base)
-    return int(byteString, 2) # return a 8 bit integer
+import sys
+import time
 
-def baseToBits(base):
-    if base == 'A':
-        return '00'
-    elif base == 'C':
-        return '01'
-    elif base == 'T':
-        return '10'
-    elif base == 'G':
-        return '11'
-    else:
-        raise ValueError('Not a valid base was provided') # Raise errors for invalid chars
+def fourBasesToByte(bases):
+    # Not the best looking, but it's fairly fast
+    bases = bases\
+        .replace('A', '00')\
+        .replace('C', '01')\
+        .replace('T', '10')\
+        .replace('G', '11')
+    return int(bases, 2) # return a 8 bit integer
 
 def compressDNA(dnaSeq, outputFile):
     lengthDNA = len(dnaSeq)
@@ -22,38 +16,47 @@ def compressDNA(dnaSeq, outputFile):
     dnaChunks = [dnaSeq[i:i+4] for i in range(0, lengthDNA, 4)] # Create a list of chunks of 4 BP https://stackoverflow.com/a/9475354
     if len(dnaChunks[-1]) != 4:
         dnaChunks[-1] = dnaChunks[-1].ljust(4, 'A') # Pad last DNA seq with A's https://stackoverflow.com/a/5676676
+    
+    start = time.time()
+    bytelist = []
     for chunk in dnaChunks: # every chunk is guaranteed to be 4 bases (1 byte)
-        curByte = fourBasesToByte(chunk)
-        outputFile.write(bytearray([curByte])) # write compressed byte to file
+        bytelist.append(fourBasesToByte(chunk))
+    outputFile.write(bytearray(bytelist)) # write compressed bytes to file
+    end = time.time()
+    print(end - start)
 
-def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 1 * 1048576): # max size to keep in memory for currentDNAseq (1,048,576 bytes in MB)
+def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 1 * 1048576): # max size to keep in memory for dnaBuffer (1,048,576 bytes in MB)
     outputFile.write('dnazip file; v0; https://github.com/Bartvelp/dnazip\n'.encode('utf-8')) # Encode header because of binary mode
-    currentDNAseq = '' # Accumulator to increase effiency
+    dnaBuffer = '' # Accumulator to increase effiency
 
     for line in inputFile:
         if line.startswith('>'): # It's a header line, don't bother with it
-            if (len(currentDNAseq) > 0): # Need to finish writing DNA before starting to write new header
-                compressDNA(currentDNAseq, outputFile)
-                currentDNAseq = '' # reset currentDNAseq
+            if (len(dnaBuffer) > 0): # Need to finish writing DNA before starting to write new header
+                compressDNA(dnaBuffer, outputFile)
+                dnaBuffer = '' # reset dnaBuffer
             outputFile.write(line.encode('utf-8')) # copy header to output
             
         else: # Not a header line
-            line = line.strip() # remove newlines
+            line = line.strip().upper() # remove newlines and convert to uppercase
             ratioDNA = (line.count('A') + line.count('C') + line.count('T') + line.count('G')) / len(line)
-            if ratioDNA != 1:
-                raise ValueError('Ratio DNA not 1 for {}'.format(line))
-            currentDNAseq += line
-            if (len(currentDNAseq) > MAX_DNA_SEQ_LEN):
-                compressDNA(currentDNAseq, outputFile)
-                currentDNAseq = '' # reset currentDNAseq
+            if ratioDNA == 1: # It's a line fully composed of ACTG
+                dnaBuffer += line
+                if (len(dnaBuffer) > MAX_DNA_SEQ_LEN):
+                    compressDNA(dnaBuffer, outputFile)
+                    dnaBuffer = '' # reset dnaBuffer
+            else: # This line contains something else than ACTG and isn't a header? (Maybe N's)
+                if (len(dnaBuffer) > 0): # If anything is the buffer write it
+                    compressDNA(dnaBuffer, outputFile)
+                    dnaBuffer = '' # reset dnaBuffer
+                outputFile.write(line.encode('utf-8')) # copy unknown line to output
     # done with every line, check if anything is left in the buffer
-    if (len(currentDNAseq) > 0):
-        compressDNA(currentDNAseq, outputFile)
+    if (len(dnaBuffer) > 0):
+        compressDNA(dnaBuffer, outputFile)
 
 
 if __name__ == "__main__": # execute if not included and is main script
-    inputF = open('./ecoli_genome.fa', 'r')
-    outputF = open('./ecoli_genome.dnazip', 'wb')
+    inputF = open('./{}.fa'.format(sys.argv[1]), 'r')
+    outputF = open('./{}.dnazip'.format(sys.argv[1]), 'wb')
 
     compress(inputF, outputF)
     print('Done compressing')

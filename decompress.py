@@ -1,5 +1,5 @@
 import math # needed for rounding up amount of bases in bytes
-
+import sys
 def byteToFourBases(byte):
     binaryString = format(byte, 'b').rjust(8, '0') # format to string and heading 00's are removed by python and should be added again
     twobitBases = [binaryString[i:i+2] for i in range(0, 8, 2)] # list of 2 bits
@@ -57,8 +57,8 @@ def decompress(inputFile, outputFile):
             outputFile.write(line.decode('utf-8'))
 
 if __name__ == "__main__": # execute if not included and is main script
-    inputF = open('./ecoli_genome.dnazip', 'rb')
-    outputF = open('./ecoli_genome.out.fa', 'w')
+    inputF = open('./{}.dnazip'.format(sys.argv[1]), 'rb')
+    outputF = open('./{}.out.fa'.format(sys.argv[1]), 'w')
 
     decompress(inputF, outputF)
     print('Done decompressing')
