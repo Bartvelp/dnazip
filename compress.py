@@ -25,13 +25,11 @@ def compressDNA(dnaSeq, outputFile):
     for chunk in dnaChunks: # every chunk is guaranteed to be 4 bases (1 byte)
         curByte = fourBasesToByte(chunk)
         outputFile.write(bytearray([curByte])) # write compressed byte to file
-    # Done writing DNA, write newline so new start always is on a new line
-    outputFile.write('\n'.encode('utf-8'))
 
-def compress(inputFile, outputFile):
+def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 1 * 1048576): # max size to keep in memory for currentDNAseq (1,048,576 bytes in MB)
     outputFile.write('dnazip file; v0; https://github.com/Bartvelp/dnazip\n'.encode('utf-8')) # Encode header because of binary mode
     currentDNAseq = '' # Accumulator to increase effiency
-    MAX_DNA_SEQ_LEN = 1 * 1048576 # max size to keep in memory for currentDNAseq (1,048,576 bytes in MB)
+
     for line in inputFile:
         if line.startswith('>'): # It's a header line, don't bother with it
             if (len(currentDNAseq) > 0): # Need to finish writing DNA before starting to write new header
@@ -54,10 +52,10 @@ def compress(inputFile, outputFile):
 
 
 if __name__ == "__main__": # execute if not included and is main script
-    ecoliFasta = open('./ecoli_genome.fa', 'r')
-    ecoliDNAzip = open('./ecoli_genome.dnazip', 'wb')
+    inputF = open('./ecoli_genome.fa', 'r')
+    outputF = open('./ecoli_genome.dnazip', 'wb')
 
-    compress(ecoliFasta, ecoliDNAzip)
+    compress(inputF, outputF)
     print('Done compressing')
-    ecoliFasta.close()
-    ecoliDNAzip.close()
+    inputF.close()
+    outputF.close()

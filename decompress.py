@@ -21,33 +21,46 @@ def bitsToBase(bits):
     else:
         raise ValueError('Not a valid bitpair was provided') # Raise errors for invalid bitpair
 
-def decompressDNA(dnaBytes, lastChunkLen, outputFile):
+def decompressDNA(dnaBytes, amountOfBases, outputFile, basesInLine = 80):
     dnaSeq = ''
     for byte in dnaBytes:
         dnaSeq += byteToFourBases(byte)
-    dnaSeq = dnaSeq[:(4 - lastChunkLen) * -1] # Remove padding
-    outputFile.write(dnaSeq)
+    
+    # Fix padding needed for full bytes
+    lastChunkLen = amountOfBases % 4 # 0 if it's a full byte
+    if lastChunkLen != 0: # Only remove padding if there is padding
+        print(lastChunkLen)
+        dnaSeq = dnaSeq[:(4 - lastChunkLen) * -1] # Remove padding
+
+    # Write to file
+    dnaLines = [dnaSeq[i:i+basesInLine] for i in range(0, len(dnaSeq), basesInLine)] # list of 2 bits
+    for line in dnaLines:
+        outputFile.write(line + '\n')
+    
 
 def decompress(inputFile, outputFile):
     header = inputFile.readline().decode('utf-8')
     if header != 'dnazip file; v0; https://github.com/Bartvelp/dnazip\n':
-        raise ValueError('Invalid dnazip file provided') # Raise errors for invalid bitpair
+        raise ValueError('Invalid dnazip file provided') # Raise errors for non dnazip file
 
     for line in inputFile:
+        # The random DNA byts are always fully read so the pointer in the filehandle is always moved forward to either
+        # a new header or to another 'DNAZIP START', meaning the next bytes python reads are handled as a new line, even though
+        # no newline character is present before them. That is why .startswith works
+
         if line.decode('utf-8').startswith('DNAZIP START'): # It's a start line, read the next x bytes
             amountOfBases = int(line[14:-1]) # Remove 'DNAZIP START: ' and trailing newline
-            amountOfBytes = math.ceil(amountOfBases / 4) # end is padded with 0's
-            amountOfBasesInLastChunk = amountOfBases % 4
-            dnaBytes = inputFile.read(amountOfBytes)
-            decompressDNA(dnaBytes, amountOfBasesInLastChunk, outputFile) # parse the bits and write to output file
+            amountOfBytes = math.ceil(amountOfBases / 4) # end is padded (with zero's)
+            dnaBytes = inputFile.read(amountOfBytes) # read the DNA bytes here, also moves forward the pointer
+            decompressDNA(dnaBytes, amountOfBases, outputFile, 60) # parse the bits and write to output file
         else: # it's likely a header line, just copy it to the output file
             outputFile.write(line.decode('utf-8'))
 
 if __name__ == "__main__": # execute if not included and is main script
-    ecoliDNAzip = open('./ecoli_genome.dnazip', 'rb')
-    ecoliNewOut = open('./ecoli_genome.out.fa', 'w')
+    inputF = open('./ecoli_genome.dnazip', 'rb')
+    outputF = open('./ecoli_genome.out.fa', 'w')
 
-    decompress(ecoliDNAzip, ecoliNewOut)
+    decompress(inputF, outputF)
     print('Done decompressing')
-    ecoliNewOut.close()
-    ecoliDNAzip.close()
+    inputF.close()
+    outputF.close()
