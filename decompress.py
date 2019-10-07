@@ -1,27 +1,21 @@
 import math # needed for rounding up amount of bases in bytes
 import sys
+import itertools
 
+def makeListOfBaseOptions():
+    bases = 'ACTG'
+    products = list(itertools.product(bases, repeat=4)) # https://docs.python.org/3/library/itertools.html#itertools.product
+    baseOptions = []
+    for baseProduct in products:
+        baseOptions.append(''.join(baseProduct)) # ['AAAA', 'AAAC' etc.
+    return baseOptions
 
-def byteToFourBases(byte): 
-    binaryString = bin(byte)[2:].rjust(8, '0') # format to string and heading 00's are removed by python and should be added again
-    twobitBases = [binaryString[i:i+2] for i in range(0, 8, 2)] # list of 2 bits
-
-    bases = ''
-    for bits in twobitBases:
-        if bits == '00':
-            bases += 'A'
-        elif bits == '01':
-            bases += 'C'
-        elif bits == '10':
-            bases += 'T'
-        elif bits == '11':
-            bases += 'G'
-    return bases
+baseOptions = makeListOfBaseOptions()
 
 def decompressDNA(dnaBytes, amountOfBases, outputFile, basesInLine = 80):
     dnaSeq = ''
-    for byte in dnaBytes:
-        dnaSeq += byteToFourBases(byte)
+    for byte in dnaBytes: # byte is actually 8-bit integer (0 - 255) in a for loop
+        dnaSeq += baseOptions[byte]
     
     # Fix padding needed for full bytes
     lastChunkLen = amountOfBases % 4 # 0 if it's a full byte
@@ -30,8 +24,8 @@ def decompressDNA(dnaBytes, amountOfBases, outputFile, basesInLine = 80):
         dnaSeq = dnaSeq[:(4 - lastChunkLen) * -1] # Remove padding
 
     # Write to file
-    dnaLines = [dnaSeq[i:i+basesInLine] for i in range(0, len(dnaSeq), basesInLine)] # list of 2 bits
-    for line in dnaLines:
+    for i in range(0, len(dnaSeq), basesInLine): # every n char write \n
+        line = dnaSeq[i:i+basesInLine]
         outputFile.write(line + '\n')
     
 
