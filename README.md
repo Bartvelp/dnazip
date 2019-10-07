@@ -15,7 +15,7 @@ Install it using pip
 	$ dnazip -h
 	usage: dnazip [-h] [-l LINELENGTH] [-d] [-c] [--debug] [FILE]
 
-	Compress FASTA files, using 2 bits per base
+	Compress FASTA files, using 2 bits per base. If no input file is given, standard input is used
 
 	positional arguments:
 	  FILE                  Input file name
