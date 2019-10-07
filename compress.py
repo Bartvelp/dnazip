@@ -1,6 +1,4 @@
 import sys
-import time
-
 def basesToBits(bases):
     # Not the best looking, but it's fairly fast
     bases = bases\
@@ -34,7 +32,7 @@ def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 10 * 1048576): # max size 
             ratioDNA = (line.count('A') + line.count('C') + line.count('T') + line.count('G')) / len(line)
             if ratioDNA == 1: # It's a line fully composed of ACTG
                 dnaBuffer += line
-                if (len(dnaBuffer) > MAX_DNA_SEQ_LEN):
+                if (len(dnaBuffer) > MAX_DNA_SEQ_LEN): # Buffer is full, clean it
                     compressDNA(dnaBuffer, outputFile)
                     dnaBuffer = '' # reset dnaBuffer
             else: # This line contains something else than ACTG and isn't a header? (Maybe N's)
