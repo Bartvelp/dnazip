@@ -1,25 +1,22 @@
 import math # needed for rounding up amount of bases in bytes
 import sys
-def byteToFourBases(byte):
-    binaryString = format(byte, 'b').rjust(8, '0') # format to string and heading 00's are removed by python and should be added again
+
+
+def byteToFourBases(byte): 
+    binaryString = bin(byte)[2:].rjust(8, '0') # format to string and heading 00's are removed by python and should be added again
     twobitBases = [binaryString[i:i+2] for i in range(0, 8, 2)] # list of 2 bits
 
     bases = ''
-    for twobitBase in twobitBases:
-        bases += bitsToBase(twobitBase)
+    for bits in twobitBases:
+        if bits == '00':
+            bases += 'A'
+        elif bits == '01':
+            bases += 'C'
+        elif bits == '10':
+            bases += 'T'
+        elif bits == '11':
+            bases += 'G'
     return bases
-
-def bitsToBase(bits):
-    if bits == '00':
-        return 'A'
-    elif bits == '01':
-        return 'C'
-    elif bits == '10':
-        return 'T'
-    elif bits == '11':
-        return 'G'
-    else:
-        raise ValueError('Not a valid bitpair was provided') # Raise errors for invalid bitpair
 
 def decompressDNA(dnaBytes, amountOfBases, outputFile, basesInLine = 80):
     dnaSeq = ''
