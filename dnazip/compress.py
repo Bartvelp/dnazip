@@ -29,7 +29,8 @@ def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 10 * 1048576): # max size 
             
         else: # Not a header line
             line = line.strip().upper() # remove newlines and convert to uppercase
-            ratioDNA = (line.count('A') + line.count('C') + line.count('T') + line.count('G')) / len(line)
+            ratioDNA = (line.count('A') + line.count('C') + line.count('T') + line.count('G')) / len(line) if len(line) > 0 else 0 # Line length can be zero
+            
             if ratioDNA == 1: # It's a line fully composed of ACTG
                 dnaBuffer += line
                 if (len(dnaBuffer) > MAX_DNA_SEQ_LEN): # Buffer is full, clean it

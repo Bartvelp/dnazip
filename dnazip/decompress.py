@@ -15,12 +15,11 @@ baseOptions = makeListOfBaseOptions()
 def decompressDNA(dnaBytes, amountOfBases, outputFile, basesInLine = 80):
     dnaSeq = ''
     for byte in dnaBytes: # byte is actually 8-bit integer (0 - 255) in a for loop
-        dnaSeq += baseOptions[byte]
+        dnaSeq += baseOptions[byte] # Use this integer to access a static (sorted) array, this is the main timesink in decompression
     
     # Fix padding needed for full bytes
     lastChunkLen = amountOfBases % 4 # 0 if it's a full byte
     if lastChunkLen != 0: # Only remove padding if there is padding
-        print(lastChunkLen)
         dnaSeq = dnaSeq[:(4 - lastChunkLen) * -1] # Remove padding
 
     # Write to file
@@ -35,7 +34,7 @@ def decompress(inputFile, outputFile, lineLength = 60):
         raise ValueError('Invalid dnazip file provided') # Raise errors for non dnazip file
 
     for line in inputFile:
-        # The random DNA byts are always fully read so the pointer in the filehandle is always moved forward to either
+        # The random DNA bytes are always fully read so the pointer in the filehandle is always moved forward to either
         # a new FASTA header or to another 'DNAZIP START', meaning the next bytes python reads are handled as a new line, even though
         # no newline character is present before them. That is why .startswith works
         if line.decode('utf-8').startswith('DNAZIP START'): # It's a start line, read the next x bytes
