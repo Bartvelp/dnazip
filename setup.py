@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='dnazip',
-      version='0.1',
+      version='0.1.2',
       description='Compression for Fasta files',
       url='http://github.com/Bartvelp/dnazip',
       author='Bart Grosman',
