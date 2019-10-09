@@ -32,3 +32,10 @@ Or to install it from source:
 	$ git clone https://github.com/Bartvelp/dnazip
 	$ cd dnazip
 	$ pip install .
+
+## Testing
+
+To run the tests run:
+
+	$ cd dnazip
+	$ python tests.py
