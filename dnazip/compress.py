@@ -1,18 +1,21 @@
 import sys
 def basesToBits(bases):
     # Not the best looking, but it's fairly fast
-    bases = bases\
+    bits = bases\
         .replace('A', '00')\
         .replace('C', '01')\
         .replace('T', '10')\
         .replace('G', '11')
-    return bases
+    return bits
 
 def compressDNA(dnaSeq, outputFile):
     lengthDNA = len(dnaSeq)
     outputFile.write('DNAZIP START: {}\n'.format(lengthDNA).encode('utf-8')) # Add amount of BP's to header for deflating
 
     bitSeq = basesToBits(dnaSeq) # Transform bases into a string of bits
+    lastByteLen = len(bitSeq) % 8 # 0 if full
+    if lastByteLen: # 2, 4 or 6
+        bitSeq += '0' * (8 - lastByteLen) # Pad with zero's to a full byte
     byteBuffer = [int(bitSeq[i:i+8], 2) for i in range(0, len(bitSeq), 8)] # transform bit string into list of 8 bit ints
     outputFile.write(bytearray(byteBuffer)) # write compressed bytes to file
 
