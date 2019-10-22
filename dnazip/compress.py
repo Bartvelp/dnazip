@@ -1,22 +1,25 @@
 import sys
-def basesToBits(bases):
-    # Not the best looking, but it's fairly fast
-    bits = bases\
-        .replace('A', '00')\
-        .replace('C', '01')\
-        .replace('T', '10')\
-        .replace('G', '11')
-    return bits
+import itertools
+
+def makeDictOfByteOptions():
+    bases = 'ACTG'
+    products = list(itertools.product(bases, repeat=4)) # https://docs.python.org/3/library/itertools.html#itertools.product
+    byteOptions = {}
+    i = 0
+    for baseProduct in products:
+        byteOptions[''.join(baseProduct)] = i
+        i += 1
+    return byteOptions # { 'AAAA': 0, 'AAAC': 1 etc.
+
+byteOptions = makeDictOfByteOptions()
 
 def compressDNA(dnaSeq, outputFile):
     lengthDNA = len(dnaSeq)
     outputFile.write('DNAZIP START: {}\n'.format(lengthDNA).encode('utf-8')) # Add amount of BP's to header for deflating
-
-    bitSeq = basesToBits(dnaSeq) # Transform bases into a string of bits
-    lastByteLen = len(bitSeq) % 8 # 0 if full
-    if lastByteLen: # 2, 4 or 6
-        bitSeq += '0' * (8 - lastByteLen) # Pad with zero's to a full byte
-    byteBuffer = [int(bitSeq[i:i+8], 2) for i in range(0, len(bitSeq), 8)] # transform bit string into list of 8 bit ints
+    lastByteLen = len(dnaSeq) % 4 # 0 if full
+    if lastByteLen: # 1 2 or 3
+        dnaSeq += 'A' * (4 - lastByteLen) # Pad with A's to a full byte
+    byteBuffer = [byteOptions[dnaSeq[i:i+4]] for i in range(0, len(dnaSeq), 4)] # transform bases string into list of 8 bit ints
     outputFile.write(bytearray(byteBuffer)) # write compressed bytes to file
 
 def compress(inputFile, outputFile, MAX_DNA_SEQ_LEN = 10 * 1048576): # max size to keep in memory for dnaBuffer (1,048,576 bytes in MB)
